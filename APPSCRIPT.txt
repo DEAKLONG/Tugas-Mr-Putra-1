@@ -1,0 +1,477 @@
+/****************************************************
+ * GOOGLE APPS SCRIPT - GENERIC CRUD API
+ * Database : Google Spreadsheet
+ ****************************************************/
+
+
+// ==================================================
+// KONFIGURASI
+// ==================================================
+
+const CONFIG = {
+
+  // ID Google Spreadsheet WAJIB GANTI SESUAI KEBUTUHAN
+  SPREADSHEET_ID: '1ebe8S9I6ULl3gQQSowp6mpYKxZHsq5p4x1Hqrtaie2U',
+
+  // Nama Sheet WAJIB GANTI SESUAI KEBUTUHAN
+  SHEET_NAME: 'LAT_1',
+
+  // Nama kolom ID WAJIB GANTI SESUAI KEBUTUHAN
+  ID_FIELD: 'ID'
+
+};
+
+
+// ==================================================
+// DO GET
+// ==================================================
+
+function doGet(e) {
+
+  try {
+
+    const action = e.parameter.action || 'read';
+
+    switch (action) {
+
+      case 'read':
+        return response(readData());
+
+      case 'get':
+        return response(getData(e.parameter.id));
+
+      default:
+        return response({
+          success: false,
+          message: 'Action tidak dikenal'
+        });
+
+    }
+
+  } catch (error) {
+
+    return response({
+      success: false,
+      message: error.message
+    });
+
+  }
+
+}
+
+
+// ==================================================
+// DO POST
+// ==================================================
+
+function doPost(e) {
+
+  try {
+
+    const data = JSON.parse(e.postData.contents);
+
+    const action = data.action;
+
+    switch (action) {
+
+      case 'create':
+        return response(createData(data.data));
+
+      case 'update':
+        return response(
+          updateData(data.id, data.data)
+        );
+
+      case 'delete':
+        return response(
+          deleteData(data.id)
+        );
+
+      default:
+        return response({
+          success: false,
+          message: 'Action tidak dikenal'
+        });
+
+    }
+
+  } catch (error) {
+
+    return response({
+      success: false,
+      message: error.message
+    });
+
+  }
+
+}
+
+
+// ==================================================
+// GET SHEET
+// ==================================================
+
+function getSheet() {
+
+  const spreadsheet =
+    SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+
+  const sheet =
+    spreadsheet.getSheetByName(CONFIG.SHEET_NAME);
+
+  if (!sheet) {
+
+    throw new Error(
+      'Sheet "' +
+      CONFIG.SHEET_NAME +
+      '" tidak ditemukan.'
+    );
+
+  }
+
+  return sheet;
+
+}
+
+
+// ==================================================
+// GET HEADER
+// ==================================================
+
+function getHeaders() {
+
+  const sheet = getSheet();
+
+  const lastColumn =
+    sheet.getLastColumn();
+
+  if (lastColumn === 0) {
+    return [];
+  }
+
+  return sheet
+    .getRange(1, 1, 1, lastColumn)
+    .getValues()[0];
+
+}
+
+
+// ==================================================
+// READ SEMUA DATA
+// ==================================================
+
+function readData() {
+
+  const sheet = getSheet();
+
+  const lastRow =
+    sheet.getLastRow();
+
+  const lastColumn =
+    sheet.getLastColumn();
+
+  if (lastRow < 2) {
+
+    return {
+      success: true,
+      data: []
+    };
+
+  }
+
+  const headers =
+    getHeaders();
+
+  const values =
+    sheet
+      .getRange(
+        2,
+        1,
+        lastRow - 1,
+        lastColumn
+      )
+      .getValues();
+
+  const data = values.map(function(row) {
+
+    let object = {};
+
+    headers.forEach(function(header, index) {
+
+      object[header] =
+        row[index];
+
+    });
+
+    return object;
+
+  });
+
+  return {
+    success: true,
+    data: data
+  };
+
+}
+
+
+// ==================================================
+// GET SATU DATA
+// ==================================================
+
+function getData(id) {
+
+  const sheet = getSheet();
+
+  const headers = getHeaders();
+
+  const idIndex =
+    headers.indexOf(CONFIG.ID_FIELD);
+
+  if (idIndex === -1) {
+
+    throw new Error(
+      'Kolom ID tidak ditemukan.'
+    );
+
+  }
+
+  const values =
+    sheet
+      .getDataRange()
+      .getValues();
+
+  for (let i = 1; i < values.length; i++) {
+
+    if (
+      String(values[i][idIndex]) ===
+      String(id)
+    ) {
+
+      let object = {};
+
+      headers.forEach(function(header, index) {
+
+        object[header] =
+          values[i][index];
+
+      });
+
+      return {
+        success: true,
+        data: object
+      };
+
+    }
+
+  }
+
+  return {
+    success: false,
+    message: 'Data tidak ditemukan.'
+  };
+
+}
+
+
+// ==================================================
+// CREATE
+// ==================================================
+
+function createData(data) {
+
+  const sheet = getSheet();
+
+  const headers = getHeaders();
+
+  // Generate ID otomatis
+  const id =
+    Utilities.getUuid();
+
+  const row = headers.map(function(header) {
+
+    if (header === CONFIG.ID_FIELD) {
+
+      return id;
+
+    }
+
+    return data[header] !== undefined
+      ? data[header]
+      : '';
+
+  });
+
+  sheet.appendRow(row);
+
+  return {
+
+    success: true,
+
+    message: 'Data berhasil ditambahkan.',
+
+    id: id
+
+  };
+
+}
+
+
+// ==================================================
+// UPDATE
+// ==================================================
+
+function updateData(id, data) {
+
+  const sheet = getSheet();
+
+  const headers = getHeaders();
+
+  const idIndex =
+    headers.indexOf(CONFIG.ID_FIELD);
+
+  if (idIndex === -1) {
+
+    throw new Error(
+      'Kolom ID tidak ditemukan.'
+    );
+
+  }
+
+  const values =
+    sheet
+      .getDataRange()
+      .getValues();
+
+  for (let i = 1; i < values.length; i++) {
+
+    if (
+      String(values[i][idIndex]) ===
+      String(id)
+    ) {
+
+      const rowNumber = i + 1;
+
+      headers.forEach(function(header, index) {
+
+        // ID tidak boleh diubah
+        if (
+          header !== CONFIG.ID_FIELD &&
+          data[header] !== undefined
+        ) {
+
+          sheet
+            .getRange(
+              rowNumber,
+              index + 1
+            )
+            .setValue(
+              data[header]
+            );
+
+        }
+
+      });
+
+      return {
+
+        success: true,
+
+        message:
+          'Data berhasil diperbarui.'
+
+      };
+
+    }
+
+  }
+
+  return {
+
+    success: false,
+
+    message:
+      'Data tidak ditemukan.'
+
+  };
+
+}
+
+
+// ==================================================
+// DELETE
+// ==================================================
+
+function deleteData(id) {
+
+  const sheet = getSheet();
+
+  const headers = getHeaders();
+
+  const idIndex =
+    headers.indexOf(CONFIG.ID_FIELD);
+
+  if (idIndex === -1) {
+
+    throw new Error(
+      'Kolom ID tidak ditemukan.'
+    );
+
+  }
+
+  const values =
+    sheet
+      .getDataRange()
+      .getValues();
+
+  for (let i = 1; i < values.length; i++) {
+
+    if (
+      String(values[i][idIndex]) ===
+      String(id)
+    ) {
+
+      sheet.deleteRow(i + 1);
+
+      return {
+
+        success: true,
+
+        message:
+          'Data berhasil dihapus.'
+
+      };
+
+    }
+
+  }
+
+  return {
+
+    success: false,
+
+    message:
+      'Data tidak ditemukan.'
+
+  };
+
+}
+
+
+// ==================================================
+// RESPONSE JSON
+// ==================================================
+
+function response(data) {
+
+  return ContentService
+
+    .createTextOutput(
+      JSON.stringify(data)
+    )
+
+    .setMimeType(
+      ContentService.MimeType.JSON
+    );
+
+}

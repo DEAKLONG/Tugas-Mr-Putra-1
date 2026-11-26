@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tugas Sebelum UKK</title>
+  <link rel="stylesheet" href="style.css" />
+  <link
+    rel="stylesheet"
+    href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"
+    integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm"
+    crossorigin="anonymous" />
+</head>
+
+<body>
+  <section class="roti">
+    <input type="hidden" id="edit-id" value="" />
+    <div class="judul-roti">
+      <h1>🍞 Sistem Inventaris Roti</h1>
+    </div>
+    <div class="container-roti">
+      <div class="atas-roti">
+        <div class="input1">
+          <h2>🍞 Nama Roti</h2>
+          <div class="input1-1">
+            <span class="icon-box"><i class="fas fa-bread-slice"></i></span>
+            <input type="text" id="nama-roti" placeholder="e.g., Croissant, Roti Tawar" />
+          </div>
+        </div>
+        <div class="input1">
+          <h2><i class="fas fa-money-bill"></i> Harga Satuan (Rp)</h2>
+          <div class="input1-1">
+            <span class="icon-box"><i class="fas fa-dollar-sign"></i></span>
+            <input type="number" id="harga-satuan" placeholder="e.g., 15000" />
+          </div>
+        </div>
+        <div class="input1">
+          <h2><i class="far fa-folder-open"></i> Kategori Roti</h2>
+          <div class="input1-1">
+            <span class="icon-box"><i class="far fa-folder-open"></i></span>
+            <select id="kategori-roti">
+              <option value="">Pilih Kategori</option>
+              <option value="Roti Manis">Roti Manis</option>
+              <option value="Roti Tawar">Roti Tawar</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="bawah-roti">
+        <button type="button" class="button1-roti" id="btn-simpan" onclick="simpanData()">+ Tambahkan ke Stok</button>
+        <button type="button" class="button2-roti" onclick="resetForm()">Reset Form</button>
+      </div>
+    </div>
+
+    <!-- BAGIAN TABEL DATA STOK ROTI -->
+    <div class="container-roti" style="margin-top: 25px;">
+      <h2 style="margin-bottom: 15px;">📋 Daftar Stok Roti</h2>
+      <div style="overflow-x: auto;">
+        <table border="1" cellpadding="10" cellspacing="0" style="width: 100%; border-collapse: collapse; background: #fff;">
+          <thead>
+            <tr style="background-color: #f4f4f4; text-align: left;">
+              <th>No</th>
+              <th>Nama Roti</th>
+              <th>Harga Satuan (Rp)</th>
+              <th>Kategori</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tabel-roti">
+            <tr>
+              <td colspan="5" style="text-align: center;">Memuat data dari Spreadsheet...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <script src="script.js"></script>
+</body>
+
+</html>
